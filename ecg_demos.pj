@@ -1,0 +1,15 @@
+@=
+projectType="application_plugin";
+projectName="ecg_demos";
+projectGUID="D6E8F6FA-C39E-4CE7-8FCC-9156FB896C24";
+addProjectDirs=[CGV_DIR."/libs", CGV_DIR."/plugins", CGV_DIR."/3rd"];
+addIncDirs=[CGV_DIR."/libs"];
+addProjectDeps=[
+	"cgv_utils", "cgv_type", "cgv_reflect", "cgv_data", "cgv_signal", "cgv_base", 
+	"cgv_media", "cgv_gui", "cgv_render","cgv_os", 
+	"cgv_viewer",
+	"cg_fltk", "crg_stereo_view", "crg_antialias", "crg_depth_of_field", "crg_light", 
+	"cmi_io","cmv_avi","crg_grid","cgv_gl"];
+addCommandLineArguments=[
+	'config:"'.INPUT_DIR.'/config.def"',
+	'"type(shader_config):shader_path='."'".INPUT_DIR.";".CGV_DIR."/libs/cgv_gl/glsl'".'"'];
