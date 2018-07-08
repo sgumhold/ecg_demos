@@ -158,8 +158,8 @@ void polygon_rasterizer::stream_help(std::ostream& os)
 /// you must overload this for gui creation
 void polygon_rasterizer::create_gui()
 {
-	bool show_tree = begin_tree_node("rasterization", synch_img_dimensions, false, "level=3;align=' ';w=120");
-	add_member_control(this, "show", cgv::base::traverse_policy::active, "toggle", "w=60");
+	bool show_tree = begin_tree_node("rasterization", synch_img_dimensions, false, "level=3;align=' ';options='w=132'");
+	add_member_control(this, "show", cgv::render::drawable::active, "toggle", "w=60");
 	if (show_tree) {
 		align("\a");
 		add_member_control(this, "synch_img_dimensions", synch_img_dimensions, "toggle");

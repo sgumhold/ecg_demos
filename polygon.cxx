@@ -112,7 +112,7 @@ bool polygon::read(const std::string& file_name)
 		close_loop(0);
 	}
 	else {
-		ss.str() = str;
+		std::stringstream ss(str);
 		size_t nr_loops;
 		ss >> nr_loops;
 		if (ss.fail())
@@ -123,7 +123,7 @@ bool polygon::read(const std::string& file_name)
 				return false;
 			is.getline(buffer, 1024);
 			str = std::string(buffer);
-			ss.str() = str;
+			std::stringstream ss(str);
 			size_t nr_vertices;
 			int closed, r, g, b;
 			ss >> nr_vertices >> closed;
@@ -140,11 +140,12 @@ bool polygon::read(const std::string& file_name)
 
 			is.getline(buffer, 1024);
 			str = std::string(buffer);
-			ss.str() = str;
-
-			ss >> x >> y;
-			if (is.fail())
-				return false;
+			{
+				std::stringstream ss(str);
+				ss >> x >> y;
+				if (ss.fail())
+					return false;
+			}
 
 			append_loop(vtx_type(x, y));			
 			set_loop_color(li, clr_type(r, g, b));
@@ -152,7 +153,7 @@ bool polygon::read(const std::string& file_name)
 			for (size_t vi = 1; vi < nr_vertices; ++vi) {
 				is.getline(buffer, 1024);
 				str = std::string(buffer);
-				ss.str() = str;
+				std::stringstream ss(str);
 
 				ss >> x >> y;
 				if (is.fail())

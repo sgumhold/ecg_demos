@@ -18,6 +18,7 @@ void polygon_view::on_new_polygon()
 {
 	vertex_colors.resize(poly.nr_vertices());
 	std::fill(vertex_colors.begin(), vertex_colors.end(), clr_type(128, 128, 128));
+	post_redraw();
 }
 
 /// find closest polygon vertex to p that is less than max_dist appart
@@ -199,6 +200,14 @@ bool polygon_view::handle(event& e)
 		if (ke.get_action() == KA_RELEASE)
 			return false;
 		switch (ke.get_key()) {
+		case 'W':
+			poly.write(QUOTE_SYMBOL_VALUE(INPUT_DIR) "/my_poly.txt");
+			break;
+		case 'R':
+			poly.clear();
+			poly.read(QUOTE_SYMBOL_VALUE(INPUT_DIR) "/my_poly.txt");
+			on_new_polygon();
+			break;
 		default: break;
 		}
 	}
