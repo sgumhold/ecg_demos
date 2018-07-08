@@ -14,9 +14,170 @@ using namespace cgv::render;
 using namespace cgv::utils;
 using namespace cgv::math;
 
+void polygon_view::after_insert_loop(size_t loop_idx)
+{
+	if (find_control(loop_index))
+		find_control(loop_index)->set("max", poly.nr_loops()-1);
+
+	if (loop_index >= loop_idx) {
+		++loop_index;
+		update_member(&loop_index);
+	}
+}
+
+void polygon_view::on_change_loop(size_t loop_idx, int flags)
+{
+	if (loop_idx != loop_index)
+		return;
+	if ((flags & PLA_BEGIN) != 0) {
+		current_loop.first_vertex = poly.loop_begin(loop_idx);
+		update_member(&current_loop.first_vertex);
+	}
+	if ((flags & PLA_SIZE) != 0) {
+		current_loop.nr_vertices = poly.loop_size(loop_idx);
+		update_member(&current_loop.nr_vertices);
+	}
+	if ((flags & PLA_CLOSED) != 0) {
+		current_loop.is_closed = poly.loop_closed(loop_idx);
+		update_member(&current_loop.is_closed);
+	}
+	if ((flags & PLA_COLOR) != 0) {
+		current_loop.color = poly.loop_color(loop_idx);
+		update_member(&current_loop.color);
+	}
+	if ((flags & PLA_ORIENTATION) != 0) {
+		current_loop.orientation = poly.loop_orientation(loop_idx);
+		update_member(&current_loop.orientation);
+	}
+}
+
+void polygon_view::before_remove_loop(size_t loop_idx)
+{
+	// before removal of last loop
+	if (poly.nr_loops() == 1) {
+		loop_index = 0;
+		update_member(&loop_index);
+		if (find_control(loop_index))
+			find_control(loop_index)->set("max", 0);
+		return;
+	}
+	if (find_control(loop_index))
+		find_control(loop_index)->set("max", poly.nr_loops()-2);
+
+	if (loop_idx > loop_index)
+		return;
+	
+	if (loop_idx < loop_index) {
+		--loop_index;
+		update_member(&loop_index);
+		return;
+	}
+	// same loop index removed as currently in gui
+
+	// if it is the first loop, set to second loop
+	if (loop_idx == 0) {		
+		loop_index = 1;
+		on_set(&loop_index);
+		loop_index = 0;
+		update_member(&loop_index);
+		return;
+	}
+	// otherwise select 0 th loop
+	loop_index = 0;
+	on_set(&loop_index);
+}
+
+void polygon_view::after_insert_vertex(size_t vtx_idx)
+{
+	if (vtx_idx <= vertex_index) {
+		++vertex_index;
+		update_member(&vertex_index);
+	}
+	if (find_control(vertex_index))
+		find_control(vertex_index)->set("max", poly.nr_vertices() - 1);
+}
+
+void polygon_view::on_change_vertex(size_t vtx_idx)
+{
+	if (vtx_idx != vertex_index)
+		return;
+	current_vertex = poly.vertex(vtx_idx);
+	update_member(&current_vertex[0]);
+	update_member(&current_vertex[1]);
+}
+
+void polygon_view::before_remove_vertex(size_t vtx_idx)
+{
+	if (poly.nr_vertices() == 1) {
+		if (find_control(vertex_index))
+			find_control(vertex_index)->set("max", 0);
+		vertex_index = 0;
+		update_member(&vertex_index);
+		return;
+	}
+	if (find_control(vertex_index))
+		find_control(vertex_index)->set("max", poly.nr_vertices() - 2);
+
+	if (vtx_idx > vertex_index)
+		return;
+	if (vtx_idx < vertex_index) {
+		--vertex_index;
+		update_member(&vertex_index);
+		return;
+	}
+	if (vtx_idx == 0) {
+		vertex_index = 1;
+		on_set(&vertex_index);
+		vertex_index = 0;
+		update_member(&vertex_index);
+		return;
+	}
+	vertex_index = 0;
+	on_set(&vertex_index);
+}
+
+void polygon_view::before_remove_vertex_range(size_t vtx_begin, size_t vtx_end)
+{
+	if (poly.nr_vertices() == vtx_end-vtx_begin) {
+		if (find_control(vertex_index))
+			find_control(vertex_index)->set("max", 0);
+		vertex_index = 0;
+		update_member(&vertex_index);
+		return;
+	}
+	if (find_control(vertex_index))
+		find_control(vertex_index)->set("max", poly.nr_vertices() - vtx_end + vtx_begin - 1);
+
+	if (vtx_begin > vertex_index)
+		return;
+	if (vtx_end <= vertex_index) {
+		vertex_index -= vtx_end-vtx_begin;
+		update_member(&vertex_index);
+		return;
+	}
+	if (vtx_begin == 0) {
+		vertex_index = vtx_end;
+		on_set(&vertex_index);
+		vertex_index = 0;
+		update_member(&vertex_index);
+		return;
+	}
+	vertex_index = 0;
+	on_set(&vertex_index);
+}
+
 void polygon_view::on_new_polygon()
 {
 	vertex_colors.resize(poly.nr_vertices());
+	loop_index = 0;
+	vertex_index = 0;
+	if (find_control(loop_index)) {
+		find_control(loop_index)->set("max", poly.nr_loops() - 1);
+		find_control(vertex_index)->set("max", poly.nr_vertices() - 1);
+	}
+	on_set(&loop_index);
+	on_set(&vertex_index);
+
 	std::fill(vertex_colors.begin(), vertex_colors.end(), clr_type(128, 128, 128));
 	post_redraw();
 }
@@ -81,7 +242,7 @@ size_t polygon_view::find_closest_edge(const vtx_type& p, float max_dist, vtx_ty
 	return edge_insert_vtx_index;
 }
 
-polygon_view::polygon_view() : cgv::base::group("polygon_view")
+polygon_view::polygon_view() : cgv::base::group("polygon_view"), current_loop(0,1)
 {
 	rasterizer = new polygon_rasterizer(poly);
 
@@ -92,6 +253,15 @@ polygon_view::polygon_view() : cgv::base::group("polygon_view")
 	else
 		poly.center_and_scale_to_unit_box();
 
+
+	connect(poly.after_insert_loop         , this, &polygon_view::after_insert_loop);
+	connect(poly.on_change_loop            , this, &polygon_view::on_change_loop);
+	connect(poly.before_remove_loop        , this, &polygon_view::before_remove_loop);
+	connect(poly.after_insert_vertex       , this, &polygon_view::after_insert_vertex);
+	connect(poly.on_change_vertex          , this, &polygon_view::on_change_vertex);
+	connect(poly.before_remove_vertex      , this, &polygon_view::before_remove_vertex);
+	connect(poly.before_remove_vertex_range, this, &polygon_view::before_remove_vertex_range);
+
 	on_new_polygon();
 
 	pnt_render_style.illumination_mode = IM_OFF;
@@ -101,6 +271,9 @@ polygon_view::polygon_view() : cgv::base::group("polygon_view")
 	view_ptr = 0;
 	selected_index = size_t(-1);
 	edge_insert_vtx_index = size_t(-1);
+
+	loop_index = 0;
+	vertex_index = 0;
 }
 
 void polygon_view::stream_help(std::ostream& os)
@@ -195,6 +368,9 @@ void polygon_view::draw(context& ctx)
 
 bool polygon_view::handle(event& e)
 {
+	if (rasterizer->handle(e))
+		return true;
+
 	if (e.get_kind() == EID_KEY) {
 		key_event& ke = static_cast<key_event&>(e);
 		if (ke.get_action() == KA_RELEASE)
@@ -346,44 +522,81 @@ bool polygon_view::handle(event& e)
 
 void polygon_view::on_set(void* member_ptr)
 {
-	if (member_ptr >= &poly.vertex(0) && member_ptr < &poly.vertex(0)+poly.nr_vertices()) {
+	if (poly.nr_vertices() > 0 && member_ptr >= &poly.vertex(0) && member_ptr < &poly.vertex(0)+poly.nr_vertices()) {
 		rasterizer->rasterize_polygon();
 	}
+
+	if (member_ptr == &loop_index) {
+		current_loop.color = poly.loop_color(loop_index);
+		current_loop.first_vertex = poly.loop_begin(loop_index);
+		current_loop.nr_vertices = poly.loop_size(loop_index);
+		current_loop.orientation = poly.loop_orientation(loop_index);
+		current_loop.is_closed = poly.loop_closed(loop_index);
+		update_member(&current_loop.color);
+		update_member(&current_loop.first_vertex);
+		update_member(&current_loop.nr_vertices);
+		update_member(&current_loop.orientation);
+		update_member(&current_loop.is_closed);
+	}
+	if (member_ptr == &current_loop.color) {
+		poly.set_loop_color(loop_index, current_loop.color);
+	}
+	if (member_ptr == &current_loop.is_closed && current_loop.is_closed != poly.loop_closed(loop_index)) {
+		if (current_loop.is_closed)
+			poly.close_loop(loop_index);
+		else
+			poly.open_loop(loop_index);
+	}
+	if (member_ptr == &current_loop.color) {
+		poly.set_loop_color(loop_index, current_loop.color);
+	}
+	if (member_ptr >= &current_vertex && member_ptr < &current_vertex + 1) {
+		poly.set_vertex(vertex_index, current_vertex);
+		rasterizer->rasterize_polygon();
+	}
+
+	if (member_ptr == &vertex_index) {
+		current_vertex = poly.vertex(vertex_index);
+		update_member(&current_vertex[0]);
+		update_member(&current_vertex[1]);
+	}
+
 	update_member(member_ptr);
 	post_redraw();
 }
-
-void polygon_view::on_register()
-{
-//	cgv::base::group::append_child(rasterizer);
-//	cgv::base::register_object(rasterizer);
-}
-
 
 void polygon_view::create_gui() 
 {	
 	add_decorator("polygon view", "heading");
 
 	inline_object_gui(rasterizer);
-	//add_member_control(this, "nr_steps", nr_steps, "value_slider", "min=0;max=100;ticks=true");
-	//find_control(nr_steps)->set("max", polygon.size() - 2);
-	//add_member_control(this, "lambda", lambda, "value_slider", "min=0;max=0.5;ticks=true");
-	//add_member_control(this, "wireframe", wireframe, "check");
-	/*if (begin_tree_node("rasterization", synch_img_dimensions)) {
-		align("\a");
-		add_member_control(this, "synch_img_dimensions", synch_img_dimensions, "toggle");
-		add_member_control(this, "img_width", img_width, "value_slider", "min=2;max=1024;log=true;ticks=true");
-		add_member_control(this, "img_height", img_height, "value_slider", "min=2;max=1024;log=true;ticks=true");
-		add_member_control(this, "background_color", background_color);
-		align("\b");
-		end_tree_node(synch_img_dimensions);
-	}*/
+
 	if (begin_tree_node("rendering", pnt_render_style)) {
 		align("\a");
-		add_member_control(this, "background_color", background_color);
-		add_gui("point style", pnt_render_style);
+			add_member_control(this, "background_color", background_color);
+			add_gui("point style", pnt_render_style);
 		align("\b");
 		end_tree_node(pnt_render_style);
+	}
+
+	if (begin_tree_node("polygon", poly)) {
+		align("\a");
+			add_member_control(this, "loop_index", loop_index, "value_slider", "min=0;max=1;ticks=true");
+			find_control(loop_index)->set("max", poly.nr_loops() - 1);
+			align("\a");
+				add_member_control(this, "loop color", current_loop.color);
+				add_member_control(this, "loop closed", current_loop.is_closed);
+				add_view("loop size", current_loop.nr_vertices);
+				add_view("loop begin", current_loop.first_vertex);
+				add_member_control(this, "loop orientation", current_loop.orientation, "dropdown", "enums='undef,ccw,cw'");
+			align("\b");
+			add_member_control(this, "vertex_index", vertex_index, "value_slider", "min=0;max=1;ticks=true");
+			find_control(vertex_index)->set("max", poly.nr_vertices() - 1);
+			align("\a");
+				add_gui("vertex", current_vertex, "", "options='min=-2;max=2;ticks=true'");
+			align("\b");
+		align("\b");
+		end_tree_node(poly);
 	}
 }
 

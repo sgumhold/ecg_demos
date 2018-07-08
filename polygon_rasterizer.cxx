@@ -158,16 +158,16 @@ void polygon_rasterizer::stream_help(std::ostream& os)
 /// you must overload this for gui creation
 void polygon_rasterizer::create_gui()
 {
-	bool show_tree = begin_tree_node("rasterization", synch_img_dimensions, false, "level=3;align=' ';options='w=132'");
+	bool show_tree = begin_tree_node("rasterization", synch_img_dimensions, false, "align=' ';options='w=132'");
 	add_member_control(this, "show", cgv::render::drawable::active, "toggle", "w=60");
 	if (show_tree) {
 		align("\a");
-		add_member_control(this, "synch_img_dimensions", synch_img_dimensions, "toggle");
-		add_member_control(this, "img_width", img_width, "value_slider", "min=2;max=1024;log=true;ticks=true");
-		add_member_control(this, "img_height", img_height, "value_slider", "min=2;max=1024;log=true;ticks=true");
-		add_member_control(this, "bg_color0", bg_clr[0]);
-		add_member_control(this, "bg_color1", bg_clr[1]);
-		add_member_control(this, "fg_color", fg_clr);
+			add_member_control(this, "synch_img_dimensions", synch_img_dimensions, "toggle");
+			add_member_control(this, "img_width", img_width, "value_slider", "min=2;max=1024;log=true;ticks=true");
+			add_member_control(this, "img_height", img_height, "value_slider", "min=2;max=1024;log=true;ticks=true");
+			add_member_control(this, "bg_color0", bg_clr[0]);
+			add_member_control(this, "bg_color1", bg_clr[1]);
+			add_member_control(this, "fg_color", fg_clr);
 		align("\b");
 		end_tree_node(synch_img_dimensions);
 	}
