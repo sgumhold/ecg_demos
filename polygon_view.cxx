@@ -554,7 +554,17 @@ void polygon_view::on_set(void* member_ptr)
 		poly.set_vertex(vertex_index, current_vertex);
 		rasterizer->rasterize_polygon();
 	}
-
+	if (member_ptr == &selected_index) {
+		if (selected_index != size_t(-1) && vertex_index != selected_index) {
+			vertex_index = selected_index;
+			on_set(&vertex_index);
+			size_t loop_idx = poly.find_loop(selected_index);
+			if (loop_idx != loop_index) {
+				loop_index = loop_idx;
+				on_set(&loop_index);
+			}
+		}
+	}
 	if (member_ptr == &vertex_index) {
 		current_vertex = poly.vertex(vertex_index);
 		update_member(&current_vertex[0]);
