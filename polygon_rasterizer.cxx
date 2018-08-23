@@ -2,44 +2,44 @@
 #include <cgv/gui/key_event.h>
 #include <cgv_gl/gl/gl.h>
 
-bool polygon_rasterizer::validate_pixel_location(const pixel_type& p) const 
+bool polygon_rasterizer::validate_pixel_location(const pixel_type& p) const
 {
-	return p(0) >= 0 && p(0) < int(img_width) && p(1) >= 0 && p(1) < int(img_height); 
+	return p(0) >= 0 && p(0) < int(img_width) && p(1) >= 0 && p(1) < int(img_height);
 }
 
-size_t polygon_rasterizer::linear_index(const pixel_type& p) const 
+size_t polygon_rasterizer::linear_index(const pixel_type& p) const
 {
-	return img_width*p(1) + p(0); 
+	return img_width*p(1) + p(0);
 }
 
-polygon_rasterizer::pixel_type polygon_rasterizer::round(const vtx_type& p) 
-{ 
-	return pixel_type(int(floor(p(0) + 0.5f)), int(floor(p(1) + 0.5f))); 
+polygon_rasterizer::pixel_type polygon_rasterizer::round(const vtx_type& p)
+{
+	return pixel_type(int(floor(p(0) + 0.5f)), int(floor(p(1) + 0.5f)));
 }
 
-void polygon_rasterizer::set_pixel(const pixel_type& p, const clr_type& c) 
-{ 
-	if (validate_pixel_location(p)) 
-		img[linear_index(p)] = c; 
+void polygon_rasterizer::set_pixel(const pixel_type& p, const clr_type& c)
+{
+	if (validate_pixel_location(p))
+		img[linear_index(p)] = c;
 }
 
-const polygon_rasterizer::clr_type& polygon_rasterizer::get_pixel(const pixel_type& p) const 
-{ 
-	return img[linear_index(p)]; 
+const polygon_rasterizer::clr_type& polygon_rasterizer::get_pixel(const pixel_type& p) const
+{
+	return img[linear_index(p)];
 }
 
-polygon_rasterizer::vtx_type polygon_rasterizer::pixel_from_world(const vtx_type& p) const 
-{ 
-	return vtx_type(float(img_width), float(img_height))*(p - img_extent.get_min_pnt()) / img_extent.get_extent(); 
+polygon_rasterizer::vtx_type polygon_rasterizer::pixel_from_world(const vtx_type& p) const
+{
+	return vtx_type(float(img_width), float(img_height))*(p - img_extent.get_min_pnt()) / img_extent.get_extent();
 }
 
-polygon_rasterizer::vtx_type polygon_rasterizer::world_from_pixel(const vtx_type& p) const 
-{ 
-	return p*img_extent.get_extent() / vtx_type(float(img_width), float(img_height)) + img_extent.get_min_pnt(); 
+polygon_rasterizer::vtx_type polygon_rasterizer::world_from_pixel(const vtx_type& p) const
+{
+	return p*img_extent.get_extent() / vtx_type(float(img_width), float(img_height)) + img_extent.get_min_pnt();
 }
 
-void polygon_rasterizer::clear_image() 
-{ 
+void polygon_rasterizer::clear_image()
+{
 	for (size_t y = 0; y<img_height; ++y)
 		for (size_t x = 0; x<img_width; ++x)
 			img[linear_index(pixel_type(x,y))] = bg_clr[(x+y)&1];
@@ -47,9 +47,51 @@ void polygon_rasterizer::clear_image()
 
 void polygon_rasterizer::rasterize_polygon()
 {
+	//clear the canvas
 	clear_image();
-	for (size_t vi = 0; vi < poly.nr_vertices(); ++vi)
-		set_pixel(pixel_from_world(poly.vertex(vi)), fg_clr);
+	// iterate all the vertices
+	for (size_t vi = 1; vi < poly.nr_vertices(); ++vi) {
+		// propose, that poly.vertex(vi) is x and y.
+		// use Bresenham algorythm
+		// TODO: find out, how to get x and y out of fvec
+		int y0 = poly.vertex(vi - 1);
+		int x0 = poly.vertex(vi - 1);
+		int y1 = poly.vertex(vi);
+		int x1 = poly.vertex(vi);
+
+		const bool steep = (abs(y1 - y0) > abs(x1 - x0));
+		if (steep) {
+			std::swap(x0, y0);
+			std::swap(x1, y1);
+		}
+
+		if (x0 > x1) {
+			std::swap(x0, x1);
+			std::swap(y0, y1);
+		}
+		const int dx = x1 - x0;
+		const int dy = abs(y1 - y0);
+
+		int error = dx / 2;
+		const int ystep = (y0 < y1) ? 1 : -1;
+		int y = y0;
+
+		const int maxX = x1;
+
+		for (int x = x0; x < maxX; x++) {
+			if (steep)
+				//canvas.set_pixel(y, x);
+				set_pixel(pixel_from_world(poly.vertex(vi)), fg_clr);
+			else
+				//canvas.set_pixel(x, y);
+				set_pixel(pixel_from_world(poly.vertex(vi)), fg_clr);
+			error -= dy;
+			if (error < 0) {
+				y += ystep;
+				error += dx;
+			}
+		}
+	}
 	tex_outofdate = true;
 }
 
@@ -132,7 +174,7 @@ void polygon_rasterizer::draw(cgv::render::context& ctx)
 	glPopMatrix();
 }
 
-/// add 
+/// add
 bool polygon_rasterizer::handle(cgv::gui::event& e)
 {
 	if (e.get_kind() == cgv::gui::EID_KEY) {
