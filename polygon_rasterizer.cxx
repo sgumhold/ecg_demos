@@ -51,13 +51,12 @@ void polygon_rasterizer::rasterize_polygon()
 	clear_image();
 	// iterate all the vertices
 	for (size_t vi = 1; vi < poly.nr_vertices(); ++vi) {
-		// propose, that poly.vertex(vi) is x and y.
+		// propose, that poly.vertex(vi)(0) poly.vertex(vi)(1) is x and y.
 		// use Bresenham algorythm
-		// TODO: find out, how to get x and y out of fvec
-		int y0 = poly.vertex(vi - 1);
-		int x0 = poly.vertex(vi - 1);
-		int y1 = poly.vertex(vi);
-		int x1 = poly.vertex(vi);
+		int x0 = poly.vertex(vi - 1)(0);
+		int y0 = poly.vertex(vi - 1)(1);
+		int x1 = poly.vertex(vi)(0);
+		int y1 = poly.vertex(vi)(1);
 
 		const bool steep = (abs(y1 - y0) > abs(x1 - x0));
 		if (steep) {
@@ -79,12 +78,19 @@ void polygon_rasterizer::rasterize_polygon()
 		const int maxX = x1;
 
 		for (int x = x0; x < maxX; x++) {
-			if (steep)
+			fvec<float,2> tempVec;
+			if (steep) {
 				//canvas.set_pixel(y, x);
-				set_pixel(pixel_from_world(poly.vertex(vi)), fg_clr);
-			else
+				tempVec(0) = y;
+				tempVec(1) = x;
+				set_pixel(pixel_from_world(tempVec), fg_clr);
+			}
+			else {
 				//canvas.set_pixel(x, y);
-				set_pixel(pixel_from_world(poly.vertex(vi)), fg_clr);
+				tempVec(0) = x;
+				tempVec(1) = y;
+				set_pixel(pixel_from_world(tempVec), fg_clr);
+			}
 			error -= dy;
 			if (error < 0) {
 				y += ystep;
