@@ -78,7 +78,7 @@ void polygon_rasterizer::rasterize_polygon()
 		const int maxX = x1;
 
 		for (int x = x0; x < maxX; x++) {
-			fvec<float,2> tempVec;
+			vtx_type tempVec;
 			if (steep) {
 				//canvas.set_pixel(y, x);
 				tempVec(0) = y;
