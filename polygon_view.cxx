@@ -17,7 +17,7 @@ using namespace cgv::math;
 void polygon_view::after_insert_loop(size_t loop_idx)
 {
 	if (find_control(loop_index))
-		find_control(loop_index)->set("max", poly.nr_loops()-1);
+		find_control(loop_index)->set("max", poly.nr_loops() - 1);
 
 	if (loop_index >= loop_idx) {
 		++loop_index;
@@ -62,11 +62,11 @@ void polygon_view::before_remove_loop(size_t loop_idx)
 		return;
 	}
 	if (find_control(loop_index))
-		find_control(loop_index)->set("max", poly.nr_loops()-2);
+		find_control(loop_index)->set("max", poly.nr_loops() - 2);
 
 	if (loop_idx > loop_index)
 		return;
-	
+
 	if (loop_idx < loop_index) {
 		--loop_index;
 		update_member(&loop_index);
@@ -75,7 +75,7 @@ void polygon_view::before_remove_loop(size_t loop_idx)
 	// same loop index removed as currently in gui
 
 	// if it is the first loop, set to second loop
-	if (loop_idx == 0) {		
+	if (loop_idx == 0) {
 		loop_index = 1;
 		on_set(&loop_index);
 		loop_index = 0;
@@ -138,7 +138,7 @@ void polygon_view::before_remove_vertex(size_t vtx_idx)
 
 void polygon_view::before_remove_vertex_range(size_t vtx_begin, size_t vtx_end)
 {
-	if (poly.nr_vertices() == vtx_end-vtx_begin) {
+	if (poly.nr_vertices() == vtx_end - vtx_begin) {
 		if (find_control(vertex_index))
 			find_control(vertex_index)->set("max", 0);
 		vertex_index = 0;
@@ -151,7 +151,7 @@ void polygon_view::before_remove_vertex_range(size_t vtx_begin, size_t vtx_end)
 	if (vtx_begin > vertex_index)
 		return;
 	if (vtx_end <= vertex_index) {
-		vertex_index -= vtx_end-vtx_begin;
+		vertex_index -= vtx_end - vtx_begin;
 		update_member(&vertex_index);
 		return;
 	}
@@ -185,16 +185,15 @@ void polygon_view::on_new_polygon()
 /// find closest polygon vertex to p that is less than max_dist appart
 size_t polygon_view::find_closest_vertex(const vtx_type& p, float max_dist) const
 {
-	size_t vtx_idx = size_t(-1);
+	size_t vtx_idx = size_t(-1); //TODO: UINT_MAX
 	float min_dist = 0;
 	for (size_t vi = 0; vi < poly.nr_vertices(); ++vi) {
 		float dist = (poly.vertex(vi) - p).length();
-		if (dist <= max_dist) {
+		if (dist <= max_dist) 
 			if (vtx_idx == size_t(-1) || dist < min_dist) {
 				min_dist = dist;
 				vtx_idx = vi;
 			}
-		}
 	}
 	return vtx_idx;
 }
@@ -202,7 +201,7 @@ size_t polygon_view::find_closest_vertex(const vtx_type& p, float max_dist) cons
 /// find closest polygon edge to p that is less than max_dist appart and set edge_point to closest point on found edge
 size_t polygon_view::find_closest_edge(const vtx_type& p, float max_dist, vtx_type& edge_point) const
 {
-	size_t edge_insert_vtx_index = size_t(-1);
+	size_t edge_insert_vtx_index = size_t(-1); //TODO: UINT_MAX
 	float min_dist = 0;
 
 	// iterate all edges
@@ -218,18 +217,18 @@ size_t polygon_view::find_closest_edge(const vtx_type& p, float max_dist, vtx_ty
 			const vtx_type& p0 = poly.vertex(vi_last);
 			const vtx_type& p1 = poly.vertex(vi);
 
-			// compute edge lambda and check that it is in [0,1]
+			// compute edge lambda and check that it is in [0,1] // TODO: [0,1] or (0,1) ??
 			vtx_type d = p1 - p0;
 			float lambda = dot(p - p0, d) / dot(d, d);
 			if (lambda > 0 && lambda < 1) {
 
 				// compute projected point
-				vtx_type projected_point = p0 + lambda*d;
+				vtx_type projected_point = p0 + lambda * d;
 				float dist = (projected_point - p).length();
 
 				// check distance
 				if (dist < max_dist) {
-					if (edge_insert_vtx_index == size_t(-1) || dist < min_dist) {
+					if (edge_insert_vtx_index == size_t(-1) /* TODO: UINT_MAX */ || dist < min_dist) {
 						min_dist = dist;
 						edge_insert_vtx_index = vi;
 						edge_point = projected_point;
@@ -242,7 +241,7 @@ size_t polygon_view::find_closest_edge(const vtx_type& p, float max_dist, vtx_ty
 	return edge_insert_vtx_index;
 }
 
-polygon_view::polygon_view() : cgv::base::group("polygon_view"), current_loop(0,1)
+polygon_view::polygon_view() : cgv::base::group("polygon_view"), current_loop(0, 1)
 {
 	rasterizer = new polygon_rasterizer(poly);
 
@@ -254,12 +253,12 @@ polygon_view::polygon_view() : cgv::base::group("polygon_view"), current_loop(0,
 		poly.center_and_scale_to_unit_box();
 
 
-	connect(poly.after_insert_loop         , this, &polygon_view::after_insert_loop);
-	connect(poly.on_change_loop            , this, &polygon_view::on_change_loop);
-	connect(poly.before_remove_loop        , this, &polygon_view::before_remove_loop);
-	connect(poly.after_insert_vertex       , this, &polygon_view::after_insert_vertex);
-	connect(poly.on_change_vertex          , this, &polygon_view::on_change_vertex);
-	connect(poly.before_remove_vertex      , this, &polygon_view::before_remove_vertex);
+	connect(poly.after_insert_loop, this, &polygon_view::after_insert_loop);
+	connect(poly.on_change_loop, this, &polygon_view::on_change_loop);
+	connect(poly.before_remove_loop, this, &polygon_view::before_remove_loop);
+	connect(poly.after_insert_vertex, this, &polygon_view::after_insert_vertex);
+	connect(poly.on_change_vertex, this, &polygon_view::on_change_vertex);
+	connect(poly.before_remove_vertex, this, &polygon_view::before_remove_vertex);
 	connect(poly.before_remove_vertex_range, this, &polygon_view::before_remove_vertex_range);
 
 	on_new_polygon();
@@ -269,8 +268,8 @@ polygon_view::polygon_view() : cgv::base::group("polygon_view"), current_loop(0,
 	pnt_render_style.orient_splats = false;
 	pnt_render_style.point_size = 16;
 	view_ptr = 0;
-	selected_index = size_t(-1);
-	edge_insert_vtx_index = size_t(-1);
+	selected_index = size_t(-1); //TODO: UINT_MAX
+	edge_insert_vtx_index = size_t(-1); //TODO: UINT_MAX
 
 	loop_index = 0;
 	vertex_index = 0;
@@ -302,7 +301,7 @@ void polygon_view::clear(context& ctx)
 	pnt_renderer.clear(ctx);
 }
 
-void polygon_view::draw_polygon()
+void polygon_view::draw_polygon() //TODO: rasterizer switch
 {
 	for (size_t li = 0; li < poly.nr_loops(); ++li) {
 		if (poly.loop_size(li) < 2)
@@ -310,7 +309,7 @@ void polygon_view::draw_polygon()
 		GLenum gl_type = poly.loop_closed(li) ? GL_LINE_LOOP : GL_LINE_STRIP;
 		glColor3ubv(&poly.loop_color(li)[0]);
 		glBegin(gl_type);
-		for (size_t vi=poly.loop_begin(li); vi<poly.loop_end(li); ++vi)
+		for (size_t vi = poly.loop_begin(li); vi<poly.loop_end(li); ++vi)
 			glVertex2fv(poly.vertex(vi));
 		glEnd();
 	}
@@ -319,8 +318,8 @@ void polygon_view::draw_polygon()
 
 void polygon_view::draw_vertices(context& ctx)
 {
-	clr_type tmp(255,0,255);
-	if (selected_index != size_t(-1))
+	clr_type tmp(255, 0, 255);
+	if (selected_index != size_t(-1)) // TODO: UINT_MAX
 		std::swap(tmp, vertex_colors[selected_index]);
 
 	pnt_renderer.set_color_array(ctx, vertex_colors);
@@ -329,11 +328,11 @@ void polygon_view::draw_vertices(context& ctx)
 	glDrawArrays(GL_POINTS, 0, poly.nr_vertices());
 	pnt_renderer.disable(ctx);
 
-	if (selected_index != size_t(-1))
+	if (selected_index != size_t(-1)) // TODO: UINT_MAX
 		std::swap(tmp, vertex_colors[selected_index]);
 
 
-	if (edge_insert_vtx_index != size_t(-1)) {
+	if (edge_insert_vtx_index != size_t(-1)) { // TODO: UINT_MAX
 		pnt_renderer.set_color_array(ctx, &tmp, 1);
 		pnt_renderer.set_position_array(ctx, &edge_point, 1);
 		pnt_renderer.validate_and_enable(ctx);
@@ -409,7 +408,7 @@ bool polygon_view::handle(event& e)
 							edge_insert_vtx_index = new_edge_insert_vtx_index;
 							on_set(&edge_insert_vtx_index);
 						}
-						else if ((edge_point - old_edge_point).length() > 0.5f*max_dist / pnt_render_style.point_size)
+						else if ((edge_point - old_edge_point).length() > 0.5f * max_dist / pnt_render_style.point_size)
 							on_set(&edge_point);
 					}
 					else {
@@ -434,7 +433,7 @@ bool polygon_view::handle(event& e)
 							poly.set_vertex(selected_index, poly.vertex(selected_index) + diff);
 							on_set(const_cast<vtx_type*>(&poly.vertex(selected_index)));
 							return true;
-						case cgv::gui::EM_CTRL:
+						case cgv::gui::EM_CTRL: //TODO: are the brackets needed here?
 						{
 							size_t loop_idx = poly.find_loop(selected_index);
 							for (size_t vi = poly.loop_begin(loop_idx); vi < poly.loop_end(loop_idx); ++vi) {
@@ -460,7 +459,7 @@ bool polygon_view::handle(event& e)
 				if (get_world_location(me.get_x(), me.get_y(), *view_ptr, p_d)) {
 					last_pos = vtx_type(float(p_d(0)), float(p_d(1)));
 					// if vertex is selected, nothing to be done
-					if (selected_index != size_t(-1)) {
+					if (selected_index != size_t(-1)) { // TODO: are the brackets needed here?
 					}
 					// if edge point selected, insert vertex on edge
 					else if (edge_insert_vtx_index != size_t(-1)) {
@@ -522,9 +521,8 @@ bool polygon_view::handle(event& e)
 
 void polygon_view::on_set(void* member_ptr)
 {
-	if (poly.nr_vertices() > 0 && member_ptr >= &poly.vertex(0) && member_ptr < &poly.vertex(0)+poly.nr_vertices()) {
+	if (poly.nr_vertices() > 0 && member_ptr >= &poly.vertex(0) && member_ptr < &poly.vertex(0) + poly.nr_vertices())
 		rasterizer->rasterize_polygon();
-	}
 
 	if (member_ptr == &loop_index) {
 		current_loop.color = poly.loop_color(loop_index);
@@ -538,18 +536,16 @@ void polygon_view::on_set(void* member_ptr)
 		update_member(&current_loop.orientation);
 		update_member(&current_loop.is_closed);
 	}
-	if (member_ptr == &current_loop.color) {
+	if (member_ptr == &current_loop.color) 
 		poly.set_loop_color(loop_index, current_loop.color);
-	}
 	if (member_ptr == &current_loop.is_closed && current_loop.is_closed != poly.loop_closed(loop_index)) {
 		if (current_loop.is_closed)
 			poly.close_loop(loop_index);
 		else
 			poly.open_loop(loop_index);
 	}
-	if (member_ptr == &current_loop.color) {
+	if (member_ptr == &current_loop.color)
 		poly.set_loop_color(loop_index, current_loop.color);
-	}
 	if (member_ptr >= &current_vertex && member_ptr < &current_vertex + 1) {
 		poly.set_vertex(vertex_index, current_vertex);
 		rasterizer->rasterize_polygon();
@@ -575,36 +571,36 @@ void polygon_view::on_set(void* member_ptr)
 	post_redraw();
 }
 
-void polygon_view::create_gui() 
-{	
+void polygon_view::create_gui()
+{
 	add_decorator("polygon view", "heading");
 
 	inline_object_gui(rasterizer);
 
 	if (begin_tree_node("rendering", pnt_render_style)) {
 		align("\a");
-			add_member_control(this, "background_color", background_color);
-			add_gui("point style", pnt_render_style);
+		add_member_control(this, "background_color", background_color);
+		add_gui("point style", pnt_render_style);
 		align("\b");
 		end_tree_node(pnt_render_style);
 	}
 
 	if (begin_tree_node("polygon", poly)) {
 		align("\a");
-			add_member_control(this, "loop_index", loop_index, "value_slider", "min=0;max=1;ticks=true");
-			find_control(loop_index)->set("max", poly.nr_loops() - 1);
-			align("\a");
-				add_member_control(this, "loop color", current_loop.color);
-				add_member_control(this, "loop closed", current_loop.is_closed);
-				add_view("loop size", current_loop.nr_vertices);
-				add_view("loop begin", current_loop.first_vertex);
-				add_member_control(this, "loop orientation", current_loop.orientation, "dropdown", "enums='undef,ccw,cw'");
-			align("\b");
-			add_member_control(this, "vertex_index", vertex_index, "value_slider", "min=0;max=1;ticks=true");
-			find_control(vertex_index)->set("max", poly.nr_vertices() - 1);
-			align("\a");
-				add_gui("vertex", current_vertex, "", "options='min=-2;max=2;ticks=true'");
-			align("\b");
+		add_member_control(this, "loop_index", loop_index, "value_slider", "min=0;max=1;ticks=true");
+		find_control(loop_index)->set("max", poly.nr_loops() - 1);
+		align("\a");
+		add_member_control(this, "loop color", current_loop.color);
+		add_member_control(this, "loop closed", current_loop.is_closed);
+		add_view("loop size", current_loop.nr_vertices);
+		add_view("loop begin", current_loop.first_vertex);
+		add_member_control(this, "loop orientation", current_loop.orientation, "dropdown", "enums='undef,ccw,cw'");
+		align("\b");
+		add_member_control(this, "vertex_index", vertex_index, "value_slider", "min=0;max=1;ticks=true");
+		find_control(vertex_index)->set("max", poly.nr_vertices() - 1);
+		align("\a");
+		add_gui("vertex", current_vertex, "", "options='min=-2;max=2;ticks=true'");
+		align("\b");
 		align("\b");
 		end_tree_node(poly);
 	}
