@@ -2,21 +2,21 @@
 #include <fstream>
 #include <sstream>
 
-/// constuct loop 
+/// constuct loop
 polygon_loop::polygon_loop(size_t _fst_vtx, size_t _nr_vts, clr_type _clr, bool _is_clsd) :
 	orientation(PO_UNDEF), first_vertex(_fst_vtx), nr_vertices(_nr_vts), color(_clr), is_closed(_is_clsd) {
 }
 
 /// assert that loop index is within valid range
-void polygon::validate_loop_index(size_t loop_idx) const 
+void polygon::validate_loop_index(size_t loop_idx) const
 {
-	assert(loop_idx < loops.size()); 
+	assert(loop_idx < loops.size());
 }
 
 /// assert that vertex index is within valid range
-void polygon::validate_vertex_index(size_t vtx_idx) const 
+void polygon::validate_vertex_index(size_t vtx_idx) const
 {
-	assert(vtx_idx < vertices.size()); 
+	assert(vtx_idx < vertices.size());
 }
 
 ///  function to compute the orientation of a loop
@@ -25,7 +25,7 @@ PolygonOrientation polygon::compute_orientation(size_t loop_idx) const
 	if (!loop_closed(loop_idx))
 		return PO_UNDEF;
 	float cp_sum = 0;
-	size_t last_vi = loop_end(loop_idx)-1;
+	size_t last_vi = loop_end(loop_idx) - 1;
 	for (size_t vi = loop_begin(loop_idx); vi < loop_end(loop_idx); ++vi) {
 		const vtx_type& p0 = vertex(last_vi);
 		const vtx_type& p1 = vertex(vi);
@@ -36,7 +36,7 @@ PolygonOrientation polygon::compute_orientation(size_t loop_idx) const
 }
 
 /// construct empty polygon
-polygon::polygon() 
+polygon::polygon()
 {
 }
 
@@ -147,7 +147,7 @@ bool polygon::read(const std::string& file_name)
 					return false;
 			}
 
-			append_loop(vtx_type(x, y));			
+			append_loop(vtx_type(x, y));
 			set_loop_color(li, clr_type(r, g, b));
 
 			for (size_t vi = 1; vi < nr_vertices; ++vi) {
@@ -196,34 +196,34 @@ bool polygon::write(const std::string& file_name) const
 }
 
 /// return number of loops
-size_t polygon::nr_loops() const 
+size_t polygon::nr_loops() const
 {
-	return loops.size(); 
+	return loops.size();
 }
 
 /// return orientation
-PolygonOrientation polygon::loop_orientation(size_t loop_idx) const 
+PolygonOrientation polygon::loop_orientation(size_t loop_idx) const
 {
-	validate_loop_index(loop_idx); 
-	return loops[loop_idx].orientation; 
+	validate_loop_index(loop_idx);
+	return loops[loop_idx].orientation;
 }
 
 /// return whether given loop is closed
-bool polygon::loop_closed(size_t loop_idx) const 
+bool polygon::loop_closed(size_t loop_idx) const
 {
-	validate_loop_index(loop_idx); 
-	return loops[loop_idx].is_closed; 
+	validate_loop_index(loop_idx);
+	return loops[loop_idx].is_closed;
 }
 
 /// return loop color
-const polygon::clr_type& polygon::loop_color(size_t loop_idx) const 
-{ 
-	validate_loop_index(loop_idx); 
-	return loops[loop_idx].color; 
+const polygon::clr_type& polygon::loop_color(size_t loop_idx) const
+{
+	validate_loop_index(loop_idx);
+	return loops[loop_idx].color;
 }
 
 /// set a new loop color
-void polygon::set_loop_color(size_t loop_idx, const clr_type& clr) 
+void polygon::set_loop_color(size_t loop_idx, const clr_type& clr)
 {
 	validate_loop_index(loop_idx);
 	loops[loop_idx].color = clr;
@@ -231,24 +231,24 @@ void polygon::set_loop_color(size_t loop_idx, const clr_type& clr)
 }
 
 /// return the number of vertices in given loop
-size_t polygon::loop_size(size_t loop_idx) const 
+size_t polygon::loop_size(size_t loop_idx) const
 {
-	validate_loop_index(loop_idx); 
-	return loops[loop_idx].nr_vertices; 
+	validate_loop_index(loop_idx);
+	return loops[loop_idx].nr_vertices;
 }
 
 /// return index of first vertex of given loop
-size_t polygon::loop_begin(size_t loop_idx) const 
+size_t polygon::loop_begin(size_t loop_idx) const
 {
-	validate_loop_index(loop_idx); 
-	return loops[loop_idx].first_vertex;	
+	validate_loop_index(loop_idx);
+	return loops[loop_idx].first_vertex;
 }
 
 /// return end of loop vertex index
-size_t polygon::loop_end(size_t loop_idx) const 
+size_t polygon::loop_end(size_t loop_idx) const
 {
-	validate_loop_index(loop_idx); 
-	return loops[loop_idx].first_vertex + loops[loop_idx].nr_vertices; 
+	validate_loop_index(loop_idx);
+	return loops[loop_idx].first_vertex + loops[loop_idx].nr_vertices;
 }
 
 /// try to close given loop and return whether this was successful
@@ -285,7 +285,7 @@ void polygon::open_loop(size_t loop_idx)
 }
 
 /// append a new loop composed of a single vertex, return index of new vertex
-size_t polygon::append_loop(const vtx_type& vtx) 
+size_t polygon::append_loop(const vtx_type& vtx)
 {
 	size_t vtx_idx = vertices.size();
 	polygon_loop loop(vtx_idx, 1);
@@ -297,7 +297,7 @@ size_t polygon::append_loop(const vtx_type& vtx)
 }
 
 /// remove a loop
-void polygon::remove_loop(size_t loop_idx) 
+void polygon::remove_loop(size_t loop_idx)
 {
 	validate_loop_index(loop_idx);
 	before_remove_loop(loop_idx);
@@ -309,21 +309,21 @@ void polygon::remove_loop(size_t loop_idx)
 }
 
 /// return number of vertices
-size_t polygon::nr_vertices() const 
+size_t polygon::nr_vertices() const
 {
-	return vertices.size(); 
+	return vertices.size();
 }
 
-/// read only access to given vertex 
-const polygon::vtx_type& polygon::vertex(size_t vtx_idx) const 
+/// read only access to given vertex
+const polygon::vtx_type& polygon::vertex(size_t vtx_idx) const
 {
-	validate_vertex_index(vtx_idx); 
-	return vertices[vtx_idx]; 
+	validate_vertex_index(vtx_idx);
+	return vertices[vtx_idx];
 }
 
 /// set new vertex location
 void polygon::set_vertex(size_t vtx_idx, const vtx_type& vtx, bool update_orientation)
-{ 
+{
 	validate_vertex_index(vtx_idx);
 	vertices[vtx_idx] = vtx;
 	on_change_vertex(vtx_idx);
@@ -350,7 +350,7 @@ size_t polygon::find_loop(size_t vtx_idx) const
 }
 
 /// append a new vertex to the given loop and return its index; if no loops exist, create new loop, if no loop is specified append vertex to last loop
-size_t polygon::append_vertex_to_loop(const vtx_type& vtx, size_t loop_idx) 
+size_t polygon::append_vertex_to_loop(const vtx_type& vtx, size_t loop_idx)
 {
 	if (nr_loops() == 0)
 		return append_loop(vtx);
@@ -373,7 +373,7 @@ size_t polygon::append_vertex_to_loop(const vtx_type& vtx, size_t loop_idx)
 }
 
 /// insert a new vertex before the given vertex
-void polygon::insert_vertex(const vtx_type& vtx, size_t vtx_idx) 
+void polygon::insert_vertex(const vtx_type& vtx, size_t vtx_idx)
 {
 	validate_vertex_index(vtx_idx);
 	// add vertex
@@ -395,7 +395,7 @@ void polygon::insert_vertex(const vtx_type& vtx, size_t vtx_idx)
 }
 
 /// remove a vertex, if loop size decreases to 2, loop is marked as open; if loop size decreases to 0, loop is removed
-void polygon::remove_vertex(size_t vtx_idx) 
+void polygon::remove_vertex(size_t vtx_idx)
 {
 	validate_vertex_index(vtx_idx);
 	// remove vertex
