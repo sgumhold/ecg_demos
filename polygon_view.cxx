@@ -189,7 +189,7 @@ size_t polygon_view::find_closest_vertex(const vtx_type& p, float max_dist) cons
 	float min_dist = 0;
 	for (size_t vi = 0; vi < poly.nr_vertices(); ++vi) {
 		float dist = (poly.vertex(vi) - p).length();
-		if (dist <= max_dist) 
+		if (dist <= max_dist)
 			if (vtx_idx == size_t(-1) || dist < min_dist) {
 				min_dist = dist;
 				vtx_idx = vi;
@@ -309,7 +309,7 @@ void polygon_view::draw_polygon() //TODO: rasterizer switch
 		GLenum gl_type = poly.loop_closed(li) ? GL_LINE_LOOP : GL_LINE_STRIP;
 		glColor3ubv(&poly.loop_color(li)[0]);
 		glBegin(gl_type);
-		for (size_t vi = poly.loop_begin(li); vi<poly.loop_end(li); ++vi)
+		for (size_t vi = poly.loop_begin(li); vi < poly.loop_end(li); ++vi)
 			glVertex2fv(poly.vertex(vi));
 		glEnd();
 	}
@@ -433,8 +433,8 @@ bool polygon_view::handle(event& e)
 							poly.set_vertex(selected_index, poly.vertex(selected_index) + diff);
 							on_set(const_cast<vtx_type*>(&poly.vertex(selected_index)));
 							return true;
-						case cgv::gui::EM_CTRL: //TODO: are the brackets needed here?
-						{
+						case cgv::gui::EM_CTRL: 
+						{ //TODO: are the brackets needed here?
 							size_t loop_idx = poly.find_loop(selected_index);
 							for (size_t vi = poly.loop_begin(loop_idx); vi < poly.loop_end(loop_idx); ++vi) {
 								poly.set_vertex(vi, poly.vertex(vi) + diff, false);
@@ -536,7 +536,7 @@ void polygon_view::on_set(void* member_ptr)
 		update_member(&current_loop.orientation);
 		update_member(&current_loop.is_closed);
 	}
-	if (member_ptr == &current_loop.color) 
+	if (member_ptr == &current_loop.color)
 		poly.set_loop_color(loop_index, current_loop.color);
 	if (member_ptr == &current_loop.is_closed && current_loop.is_closed != poly.loop_closed(loop_index)) {
 		if (current_loop.is_closed)
@@ -566,6 +566,26 @@ void polygon_view::on_set(void* member_ptr)
 		update_member(&current_vertex[0]);
 		update_member(&current_vertex[1]);
 	}
+	// Send colorize call to each of the polygons (left-right sweep-line style) (TODO: send fill alg type)
+	if (member_ptr == &are_filled) {
+		/*
+		// Iterate each line
+		for (size_t y = 0; y < windowHeigth; ++y) {
+			int lineFlag = 0;
+			for (size_t x = 0; x < windowWidth; ++x) {
+				if (get_world_location(x, y, *view_ptr, p_d)) {
+					if (isPolyEdgeOrVertex(x, y))
+						if (getPolyAt(x, y).loop_closed())
+							lineFlag = getPolyAt(x, y).compute_orientation() == PO_CCW ? lineFlag + 1 : lineFlag - 1;
+					// if flag isn't 0 then colorize each pixel except poly edges
+					else if (lineFlag != 0)
+						rasterizer.set_pixel(pixel_from_world(vtx_type(x, y)), colorize_color);
+				}
+			}
+		}
+		*/
+
+	}
 
 	update_member(member_ptr);
 	post_redraw();
@@ -582,6 +602,8 @@ void polygon_view::create_gui()
 		add_member_control(this, "background_color", background_color);
 		add_gui("point style", pnt_render_style);
 		align("\b");
+		add_member_control(this, "are_filled", are_filled);
+		
 		end_tree_node(pnt_render_style);
 	}
 

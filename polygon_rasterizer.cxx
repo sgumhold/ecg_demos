@@ -9,7 +9,7 @@ bool polygon_rasterizer::validate_pixel_location(const pixel_type& p) const
 
 size_t polygon_rasterizer::linear_index(const pixel_type& p) const
 {
-	return img_width*p(1) + p(0);
+	return img_width * p(1) + p(0);
 }
 
 polygon_rasterizer::pixel_type polygon_rasterizer::round(const vtx_type& p)
@@ -35,14 +35,14 @@ polygon_rasterizer::vtx_type polygon_rasterizer::pixel_from_world(const vtx_type
 
 polygon_rasterizer::vtx_type polygon_rasterizer::world_from_pixel(const vtx_type& p) const
 {
-	return p*img_extent.get_extent() / vtx_type(float(img_width), float(img_height)) + img_extent.get_min_pnt();
+	return p * img_extent.get_extent() / vtx_type(float(img_width), float(img_height)) + img_extent.get_min_pnt();
 }
 
 void polygon_rasterizer::clear_image()
 {
 	for (size_t y = 0; y<img_height; ++y)
 		for (size_t x = 0; x<img_width; ++x)
-			img[linear_index(pixel_type(x,y))] = bg_clr[(x+y)&1];
+			img[linear_index(pixel_type(x, y))] = bg_clr[(x + y) & 1];
 }
 
 void polygon_rasterizer::rasterize_polygon()
@@ -210,12 +210,12 @@ void polygon_rasterizer::create_gui()
 	add_member_control(this, "show", cgv::render::drawable::active, "toggle", "w=60");
 	if (show_tree) {
 		align("\a");
-			add_member_control(this, "synch_img_dimensions", synch_img_dimensions, "toggle");
-			add_member_control(this, "img_width", img_width, "value_slider", "min=2;max=1024;log=true;ticks=true");
-			add_member_control(this, "img_height", img_height, "value_slider", "min=2;max=1024;log=true;ticks=true");
-			add_member_control(this, "bg_color0", bg_clr[0]);
-			add_member_control(this, "bg_color1", bg_clr[1]);
-			add_member_control(this, "fg_color", fg_clr);
+		add_member_control(this, "synch_img_dimensions", synch_img_dimensions, "toggle");
+		add_member_control(this, "img_width", img_width, "value_slider", "min=2;max=1024;log=true;ticks=true");
+		add_member_control(this, "img_height", img_height, "value_slider", "min=2;max=1024;log=true;ticks=true");
+		add_member_control(this, "bg_color0", bg_clr[0]);
+		add_member_control(this, "bg_color1", bg_clr[1]);
+		add_member_control(this, "fg_color", fg_clr);
 		align("\b");
 		end_tree_node(synch_img_dimensions);
 	}

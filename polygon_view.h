@@ -39,6 +39,8 @@ private:
 	vtx_type current_vertex;
 	polygon_loop current_loop;
 
+	bool are_filled;
+
 	// polygon members
 protected:
 	polygon poly;
