@@ -1,7 +1,7 @@
 #pragma once
 
-#include "polygon.h"
 #include <cgv/base/node.h>
+#include "polygon.h"
 #include <cgv/gui/event_handler.h>
 #include <cgv/gui/provider.h>
 #include <cgv/render/drawable.h>

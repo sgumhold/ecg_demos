@@ -1,8 +1,8 @@
 #pragma once
 
+#include <cgv/base/group.h>
 #include "polygon.h"
 #include "polygon_rasterizer.h"
-#include <cgv/base/group.h>
 #include <cgv/gui/event_handler.h>
 #include <cgv/gui/provider.h>
 #include <cgv/render/drawable.h>
