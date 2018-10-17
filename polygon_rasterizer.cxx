@@ -53,10 +53,12 @@ void polygon_rasterizer::rasterize_polygon()
 	for (size_t vi = 1; vi < poly.nr_vertices(); ++vi) {
 		// propose, that poly.vertex(vi)(0) poly.vertex(vi)(1) is x and y.
 		// use Bresenham algorythm
-		int x0 = poly.vertex(vi - 1)(0);
-		int y0 = poly.vertex(vi - 1)(1);
-		int x1 = poly.vertex(vi)(0);
-		int y1 = poly.vertex(vi)(1);
+		pixel_type pix_0 = pixel_from_world(poly.vertex(vi-1));
+		pixel_type pix_1 = pixel_from_world(poly.vertex(vi));
+		int x0 = pix_0(0);
+		int y0 = pix_0(1);
+		int x1 = pix_1(0);
+		int y1 = pix_1(1);
 
 		const bool steep = (abs(y1 - y0) > abs(x1 - x0));
 		if (steep) {
@@ -79,18 +81,10 @@ void polygon_rasterizer::rasterize_polygon()
 
 		for (int x = x0; x < maxX; x++) {
 			vtx_type tempVec;
-			if (steep) {
-				//canvas.set_pixel(y, x);
-				tempVec(0) = y;
-				tempVec(1) = x;
-				set_pixel(pixel_from_world(tempVec), fg_clr);
-			}
-			else {
-				//canvas.set_pixel(x, y);
-				tempVec(0) = x;
-				tempVec(1) = y;
-				set_pixel(pixel_from_world(tempVec), fg_clr);
-			}
+			if (steep)
+				set_pixel(pixel_type(y, x));
+			else 
+				set_pixel(pixel_type(x, y));
 			error -= dy;
 			if (error < 0) {
 				y += ystep;
