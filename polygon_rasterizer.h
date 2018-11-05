@@ -8,7 +8,7 @@
 #include <cgv/render/texture.h>
 
 
-class polygon_rasterizer : 
+class polygon_rasterizer :
 	public cgv::base::node,          /// derive from node to integrate into global tree structure and to store a name
 	public cgv::gui::event_handler,  /// derive from handler to receive events and to be asked for a help string
 	public polygon_types,
@@ -59,4 +59,3 @@ public:
 	/// you must overload this for gui creation
 	void create_gui();
 };
-	

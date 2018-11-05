@@ -40,8 +40,8 @@ polygon_rasterizer::vtx_type polygon_rasterizer::world_from_pixel(const vtx_type
 
 void polygon_rasterizer::clear_image()
 {
-	for (size_t y = 0; y<img_height; ++y)
-		for (size_t x = 0; x<img_width; ++x)
+	for (size_t y = 0; y < img_height; ++y)
+		for (size_t x = 0; x < img_width; ++x)
 			img[linear_index(pixel_type(x, y))] = bg_clr[(x + y) & 1];
 }
 
