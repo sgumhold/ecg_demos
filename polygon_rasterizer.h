@@ -39,6 +39,9 @@ protected:
 	void reallocate_image();
 public:
 	polygon_rasterizer(const polygon& _poly);
+	/// rasterize line using bresenham algorithm
+	void connect_verticies_bresenham(pixel_type pix_0, pixel_type pix_1);
+	/// rasterize all the loops in the polygon
 	void rasterize_polygon();
 	///
 	void on_set(void* member_ptr);

@@ -45,51 +45,66 @@ void polygon_rasterizer::clear_image()
 			img[linear_index(pixel_type(x, y))] = bg_clr[(x + y) & 1];
 }
 
+void polygon_rasterizer::connect_verticies_bresenham(pixel_type pix_0, pixel_type pix_1) {
+
+	int x0 = pix_0(0);
+	int y0 = pix_0(1);
+	int x1 = pix_1(0);
+	int y1 = pix_1(1);
+
+	const bool steep = (abs(y1 - y0) > abs(x1 - x0));
+	if (steep) {
+		std::swap(x0, y0);
+		std::swap(x1, y1);
+	}
+
+	if (x0 > x1) {
+		std::swap(x0, x1);
+		std::swap(y0, y1);
+	}
+	const int dx = x1 - x0;
+	const int dy = abs(y1 - y0);
+
+	int error = dx / 2;
+	const int ystep = (y0 < y1) ? 1 : -1;
+	int y = y0;
+
+	const int maxX = x1;
+
+	for (int x = x0; x < maxX; x++) {
+		vtx_type tempVec;
+		if (steep)
+			set_pixel(pixel_type(y, x), fg_clr);
+		else
+			set_pixel(pixel_type(x, y), fg_clr);
+		error -= dy;
+		if (error < 0) {
+			y += ystep;
+			error += dx;
+		}
+	}
+}
+
 void polygon_rasterizer::rasterize_polygon()
 {
-	//clear the canvas
+	// clear the canvas
 	clear_image();
-	// iterate all the vertices
-	for (size_t vi = 1; vi < poly.nr_vertices(); ++vi) {
-		// propose, that poly.vertex(vi)(0) poly.vertex(vi)(1) is x and y.
-		// use Bresenham algorythm
-		pixel_type pix_0 = pixel_from_world(poly.vertex(vi-1));
-		pixel_type pix_1 = pixel_from_world(poly.vertex(vi));
-		int x0 = pix_0(0);
-		int y0 = pix_0(1);
-		int x1 = pix_1(0);
-		int y1 = pix_1(1);
-
-		const bool steep = (abs(y1 - y0) > abs(x1 - x0));
-		if (steep) {
-			std::swap(x0, y0);
-			std::swap(x1, y1);
+	// iterate all the loops
+	for (size_t li = 0; li < poly.nr_loops(); ++li) {
+		// skip "fake" loops
+		if (poly.loop_size(li) < 2)
+			continue;
+		// connect last and first if lop is closed
+		if (poly.loop_closed(li)) {
+			pixel_type pix_0 = pixel_from_world(poly.vertex(poly.loop_begin(li)));
+			pixel_type pix_1 = pixel_from_world(poly.vertex(poly.loop_end(li) - 1));
+			connect_verticies_bresenham(pix_0, pix_1);
 		}
-
-		if (x0 > x1) {
-			std::swap(x0, x1);
-			std::swap(y0, y1);
-		}
-		const int dx = x1 - x0;
-		const int dy = abs(y1 - y0);
-
-		int error = dx / 2;
-		const int ystep = (y0 < y1) ? 1 : -1;
-		int y = y0;
-
-		const int maxX = x1;
-
-		for (int x = x0; x < maxX; x++) {
-			vtx_type tempVec;
-			if (steep)
-				set_pixel(pixel_type(y, x));
-			else 
-				set_pixel(pixel_type(x, y));
-			error -= dy;
-			if (error < 0) {
-				y += ystep;
-				error += dx;
-			}
+		// connect all the vertices
+		for (size_t vi = poly.loop_begin(li) + 1; vi < poly.loop_end(li); ++vi) {
+			pixel_type pix_0 = pixel_from_world(poly.vertex(vi - 1));
+			pixel_type pix_1 = pixel_from_world(poly.vertex(vi));
+			connect_verticies_bresenham(pix_0, pix_1);
 		}
 	}
 	tex_outofdate = true;
