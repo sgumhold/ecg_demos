@@ -8,7 +8,7 @@
 #include <cgv/render/texture.h>
 
 
-class polygon_rasterizer : 
+class polygon_rasterizer :
 	public cgv::base::node,          /// derive from node to integrate into global tree structure and to store a name
 	public cgv::gui::event_handler,  /// derive from handler to receive events and to be asked for a help string
 	public polygon_types,
@@ -39,6 +39,9 @@ protected:
 	void reallocate_image();
 public:
 	polygon_rasterizer(const polygon& _poly);
+	/// rasterize line using bresenham algorithm
+	void connect_verticies_bresenham(pixel_type pix_0, pixel_type pix_1);
+	/// rasterize all the loops in the polygon
 	void rasterize_polygon();
 	///
 	void on_set(void* member_ptr);
@@ -56,4 +59,3 @@ public:
 	/// you must overload this for gui creation
 	void create_gui();
 };
-	
